@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Cobrinha Arcade · Por Vinícius</title>
+    <meta
+      name="description"
+      content="Jogo clássico da cobrinha em HTML, CSS e JavaScript puros com 5+ níveis progressivos, obstáculos, controles desktop e celular e ranking salvo no navegador. Criado por Vinícius."
+    />
+    <meta property="og:title" content="Cobrinha Arcade · Por Vinícius" />
+    <meta
+      property="og:description"
+      content="Enfrente 5+ níveis com obstáculos e velocidade crescente e dispute o topo do ranking."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body data-state="title">
+    <main class="game-shell" aria-label="Cobrinha Arcade">
+      <!-- Barra superior de HUD (visível durante a partida) -->
+      <section class="hud-bar" aria-label="Painel da partida">
+        <div class="hud-identity">
+          <span class="hud-kicker">Jogador</span>
+          <strong id="hud-player-name" class="hud-value hud-player">-</strong>
+        </div>
+
+        <div class="hud-metrics">
+          <div class="hud-stat">
+            <span class="hud-kicker">Nível</span>
+            <strong id="hud-level" class="hud-value tabular-nums">1</strong>
+            <span id="hud-level-name" class="hud-sublabel">Clareira Inicial</span>
+          </div>
+
+          <div class="hud-stat">
+            <span class="hud-kicker">Pontos</span>
+            <strong id="hud-score" class="hud-value tabular-nums">0</strong>
+            <span id="hud-target" class="hud-sublabel tabular-nums">Meta: 50</span>
+          </div>
+
+          <div class="hud-stat hud-stat-progress">
+            <div class="hud-progress-head">
+              <span class="hud-kicker">Progresso</span>
+              <span id="hud-speed" class="hud-sublabel tabular-nums">155 ms</span>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <div id="hud-progress-fill" class="progress-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-actions">
+          <button
+            id="btn-toggle-dpad"
+            type="button"
+            class="icon-btn"
+            aria-label="Mostrar ou ocultar controles na tela"
+            title="Controles na tela"
+            aria-pressed="false"
+            tabindex="-1"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="6" width="18" height="12" rx="3"></rect>
+              <path d="M8 10v4M6 12h4M15.5 11h.01M17.5 13h.01"></path>
+            </svg>
+          </button>
+
+          <button
+            id="btn-mute"
+            type="button"
+            class="icon-btn"
+            aria-label="Alternar som (M)"
+            title="Som (M)"
+            aria-pressed="false"
+            tabindex="-1"
+          >
+            <svg id="icon-sound-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+            <svg id="icon-sound-off" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          </button>
+
+          <button
+            id="btn-pause"
+            type="button"
+            class="icon-btn"
+            aria-label="Pausar partida (P)"
+            title="Pausar (P)"
+            tabindex="-1"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+              <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+            </svg>
+          </button>
+
+          <button
+            id="btn-restart-hud"
+            type="button"
+            class="icon-btn"
+            aria-label="Reiniciar partida (R)"
+            title="Reiniciar (R)"
+            tabindex="-1"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Área central do tabuleiro Canvas -->
+      <section class="arena-stage" aria-label="Arena da cobrinha">
+        <div id="arena-frame" class="arena-frame">
+          <canvas
+            id="game-canvas"
+            data-testid="game-canvas"
+            width="560"
+            height="560"
+            aria-label="Tabuleiro do jogo Cobrinha"
+          ></canvas>
+
+          <!-- Aviso de transição de nível dentro da arena -->
+          <div id="level-banner" class="level-banner hidden" role="status" aria-live="polite">
+            <span id="level-banner-kicker" class="level-banner-kicker">Nível 2</span>
+            <strong id="level-banner-title" class="level-banner-title">Pedras do Bosque</strong>
+            <span id="level-banner-desc" class="level-banner-desc">Velocidade aumentada · Prepare-se!</span>
+          </div>
+        </div>
+
+        <!-- Controles direcionais na tela (celular / toque ou modo acessível) -->
+        <div id="touch-controls" class="touch-controls" aria-label="Controles direcionais na tela">
+          <button type="button" class="dpad-btn dpad-up" data-dir="UP" aria-label="Mover para cima">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+          <button type="button" class="dpad-btn dpad-left" data-dir="LEFT" aria-label="Mover para esquerda">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button type="button" class="dpad-btn dpad-down" data-dir="DOWN" aria-label="Mover para baixo">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <button type="button" class="dpad-btn dpad-right" data-dir="RIGHT" aria-label="Mover para direita">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Faixa inferior discreta com créditos do criador e atalhos -->
+      <footer class="shell-footer">
+        <span class="creator-credit">Criado por <strong>Vinícius</strong></span>
+        <span class="footer-sep" aria-hidden="true">·</span>
+        <span class="controls-hint">Setas ou WASD no teclado · Deslize ou use os botões no celular</span>
+      </footer>
+
+      <!-- Tela Inicial (Title Screen) -->
+      <section id="screen-title" class="overlay-screen" aria-label="Tela inicial do jogo">
+        <div class="title-layout">
+          <div class="title-primary">
+            <div class="title-lockup">
+              <svg class="title-emblem" viewBox="0 0 64 64" width="56" height="56" aria-hidden="true">
+                <rect x="4" y="4" width="56" height="56" rx="14" fill="#13201A" stroke="#2B4237" stroke-width="2"></rect>
+                <path d="M16 42h18a8 8 0 0 0 8-8v-4a8 8 0 0 0-8-8h-8a6 6 0 0 1-6-6v-2" fill="none" stroke="#22C55E" stroke-width="7" stroke-linecap="round"></path>
+                <circle cx="20" cy="14" r="5" fill="#4ADE80"></circle>
+                <circle cx="18.5" cy="13" r="1.3" fill="#0B130F"></circle>
+                <circle cx="21.5" cy="13" r="1.3" fill="#0B130F"></circle>
+                <circle cx="46" cy="44" r="5" fill="#EF4444"></circle>
+                <path d="M46 39c1-2 3-3 4-2" stroke="#4ADE80" stroke-width="1.8" stroke-linecap="round" fill="none"></path>
+              </svg>
+              <div>
+                <h1 class="game-title">Cobrinha Arcade</h1>
+                <p class="game-subtitle">5 níveis progressivos · Obstáculos · Ranking local</p>
+              </div>
+            </div>
+
+            <form id="start-form" class="start-form" novalidate>
+              <label for="player-name-input" class="input-label">Nome do jogador</label>
+              <div class="input-row">
+                <input
+                  id="player-name-input"
+                  name="playerName"
+                  type="text"
+                  maxlength="24"
+                  autocomplete="nickname"
+                  placeholder="Digite seu nome para jogar"
+                  required
+                />
+                <button id="btn-start" type="submit" class="btn-primary" data-start="true">
+                  Iniciar Partida
+                </button>
+              </div>
+              <p id="name-error" class="form-error hidden" role="alert"></p>
+            </form>
+
+            <div class="levels-preview" aria-label="Resumo dos níveis">
+              <h2 class="section-heading">Progressão de Níveis</h2>
+              <ol id="levels-preview-list" class="levels-list"></ol>
+            </div>
+
+            <div class="title-credit-line">
+              <span>Criado por <strong>Vinícius</strong></span>
+              <span aria-hidden="true">·</span>
+              <span>Setas / WASD · Espaço Pausar · Toque no celular</span>
+            </div>
+          </div>
+
+          <aside class="title-ranking-panel" aria-label="Ranking dos melhores jogadores">
+            <div class="panel-header">
+              <h2 class="section-heading">Ranking</h2>
+              <button id="btn-clear-ranking-title" type="button" class="text-btn">Limpar</button>
+            </div>
+            <div id="confirm-clear-title" class="inline-confirm hidden">
+              <span>Apagar pontuações salvas?</span>
+              <div class="inline-confirm-actions">
+                <button id="btn-confirm-clear-yes" type="button" class="btn-danger-sm">Confirmar</button>
+                <button id="btn-confirm-clear-no" type="button" class="btn-ghost-sm">Cancelar</button>
+              </div>
+            </div>
+            <div id="title-ranking-container" class="ranking-container"></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Modal de Pausa -->
+      <section id="screen-paused" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+        <div class="modal-card">
+          <h2 id="pause-title" class="modal-title">Jogo Pausado</h2>
+          <p class="modal-subtitle">Respire fundo. Sua pontuação e posição estão preservadas.</p>
+          <div class="modal-actions">
+            <button id="btn-resume" type="button" class="btn-primary">Continuar</button>
+            <button id="btn-restart-pause" type="button" class="btn-secondary">Reiniciar</button>
+            <button id="btn-back-title-pause" type="button" class="btn-ghost">Voltar ao Início</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Modal de Fim de Jogo (Game Over + Ranking) -->
+      <section id="screen-gameover" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="gameover-title">
+        <div class="modal-card modal-card-wide">
+          <div class="gameover-header">
+            <h2 id="gameover-title" class="modal-title">Fim de Partida</h2>
+            <p id="gameover-reason" class="modal-subtitle">Você colidiu com a parede.</p>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-tile">
+              <span class="stat-label">Pontuação</span>
+              <strong id="final-score" class="stat-number tabular-nums">0</strong>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Nível</span>
+              <strong id="final-level" class="stat-number tabular-nums">1</strong>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Recorde</span>
+              <strong id="final-best" class="stat-number tabular-nums">0</strong>
+            </div>
+          </div>
+
+          <div class="gameover-ranking">
+            <div class="panel-header">
+              <h3 class="section-heading">Melhores Pontuações</h3>
+              <span id="gameover-player-label" class="muted-meta"></span>
+            </div>
+            <div id="gameover-ranking-container" class="ranking-container"></div>
+          </div>
+
+          <div class="modal-actions modal-actions-row">
+            <button id="btn-play-again" type="button" class="btn-primary" data-start="true">
+              Jogar Novamente
+            </button>
+            <button id="btn-change-player" type="button" class="btn-secondary">
+              Trocar Jogador
+            </button>
+          </div>
+
+          <p class="modal-creator">Cobrinha Arcade · Criado por <strong>Vinícius</strong></p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>

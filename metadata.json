@@ -1,0 +1,6 @@
+{
+  "name": "Cobrinha Arcade",
+  "description": "Jogo clássico da cobrinha em HTML, CSS e JavaScript puros com 5+ níveis progressivos, obstáculos, controles desktop e mobile e ranking persistente.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
